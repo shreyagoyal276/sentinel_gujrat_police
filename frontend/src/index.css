@@ -1,24 +1,20 @@
-/* ── Google Font Import (Must be first statement) ──── */
+/* ── Google Font Import ────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Custom UI Tokens & Helpers ────────────────────── */
+/* ── Custom UI Tokens & Helpers (Gujarat Police Maroon Theme) ─── */
 .glass-panel {
-  background-color: rgba(13, 20, 33, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  border-radius: 0.75rem;
+  background-color: #14171d;
+  border: 1px solid #282d37;
+  border-radius: 0.5rem;
 }
 
 .glass-header {
-  background-color: rgba(6, 10, 18, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  background-color: #0e1014;
+  border-bottom: 1px solid #242932;
 }
 
 .live-beacon {
@@ -27,49 +23,48 @@
   height: 7px;
   border-radius: 9999px;
   background-color: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-  animation: beaconPulse 2s ease-in-out infinite;
 }
 
 .license-plate-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 0.375rem;
-  background-color: #0b111d;
-  color: #f1f5f9;
+  background-color: #090a0d;
+  color: #f3f4f6;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   letter-spacing: 0.08em;
   font-size: 0.75rem;
-  border: 1px solid #334155;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  border: 1px solid #333a46;
 }
 
 .urgent-alert-card {
-  border-color: rgba(239, 68, 68, 0.5) !important;
-  background-color: rgba(69, 10, 10, 0.25) !important;
+  border-color: #991b1b !important;
+  background-color: #260c11 !important;
 }
 
-/* ── Base Resets ───────────────────────────────────── */
+/* ── Base Resets ──────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
   html { height: 100%; }
 
   body {
-    @apply bg-cmd-bg text-slate-100 font-sans min-h-screen overflow-x-hidden;
-    background-image:
-      radial-gradient(circle at 15% 25%, rgba(37,99,235,0.03) 0%, transparent 50%),
-      radial-gradient(circle at 85% 75%, rgba(37,99,235,0.02) 0%, transparent 50%);
+    background-color: #0b0c0e;
+    color: #e5e7eb;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 
   #root {
-    @apply min-h-screen flex;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Remove all browser-default button/input ugliness */
   button { cursor: pointer; font-family: inherit; }
   input, select, textarea { font-family: inherit; }
   input:focus, select:focus, textarea:focus { outline: none; }
@@ -78,243 +73,100 @@
 
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #05070A; }
-  ::-webkit-scrollbar-thumb { background: #26364D; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3B82F6; }
+  ::-webkit-scrollbar-track { background: #0c0d10; }
+  ::-webkit-scrollbar-thumb { background: #282d37; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #751e31; }
 }
 
-/* ── Reusable Component Layer ──────────────────────── */
+/* ── Reusable Component Layer ─────────────────────────────────── */
 @layer components {
-
-  /* Panel / Card base */
-  .panel {
-    @apply bg-cmd-panel border border-cmd-border rounded-xl;
-  }
-  .panel-card {
-    @apply bg-cmd-card border border-cmd-border rounded-xl;
-  }
-  .panel-dark {
-    @apply bg-cmd-sidebar border border-cmd-border rounded-xl;
-  }
 
   /* Section heading */
   .section-title {
-    @apply text-xs font-bold uppercase tracking-widest text-slate-400;
-  }
-  .card-title {
-    @apply text-sm font-bold text-slate-100 tracking-wide;
+    @apply text-xs font-semibold uppercase tracking-wider text-slate-400;
   }
 
   /* Nav item */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-           text-slate-400 hover:text-slate-100 hover:bg-cmd-panel
-           transition-all duration-150 cursor-pointer select-none w-full;
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium
+           text-slate-400 hover:text-slate-200 hover:bg-[#1a1e26]
+           transition-colors cursor-pointer select-none;
   }
   .nav-item-active {
-    @apply nav-item text-white bg-cmd-blue/15 border-l-2 border-cmd-blue-lt
-           hover:bg-cmd-blue/20;
+    @apply nav-item text-white bg-maroon-900 border border-maroon-700/60
+           hover:bg-maroon-900 font-semibold;
   }
 
-  /* Status pill */
+  /* Status pills */
   .status-pill {
-    @apply flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+    @apply flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold
            border font-mono;
   }
   .status-pill-green {
-    @apply status-pill bg-green-950/50 border-green-700/50 text-green-400;
+    @apply status-pill bg-emerald-950/40 border-emerald-700/50 text-emerald-400;
   }
-  .status-pill-blue {
-    @apply status-pill bg-blue-950/50 border-blue-700/50 text-blue-400;
+  .status-pill-maroon {
+    @apply status-pill bg-maroon-950 border-maroon-700/50 text-maroon-300;
   }
   .status-pill-red {
-    @apply status-pill bg-red-950/50 border-red-700/50 text-red-400;
+    @apply status-pill bg-red-950/40 border-red-700/50 text-red-400;
   }
   .status-pill-amber {
-    @apply status-pill bg-amber-950/50 border-amber-700/50 text-amber-400;
+    @apply status-pill bg-amber-950/40 border-amber-700/50 text-amber-400;
   }
 
-  /* Badge chips */
+  /* Badges */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide;
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider;
   }
   .badge-critical {
-    @apply badge bg-red-950/60 border border-red-600/50 text-red-400;
+    @apply badge bg-red-950/70 border border-red-700/60 text-red-300;
   }
   .badge-high {
-    @apply badge bg-orange-950/60 border border-orange-600/50 text-orange-400;
+    @apply badge bg-amber-950/60 border border-amber-700/60 text-amber-300;
   }
   .badge-medium {
-    @apply badge bg-amber-950/60 border border-amber-600/50 text-amber-400;
+    @apply badge bg-slate-800 border border-slate-700 text-slate-300;
   }
-  .badge-online {
-    @apply badge bg-green-950/60 border border-green-600/50 text-green-400;
-  }
-  .badge-info {
-    @apply badge bg-blue-950/60 border border-blue-600/50 text-blue-400;
+  .badge-maroon {
+    @apply badge bg-maroon-950 border border-maroon-700/60 text-maroon-300;
   }
 
   /* Buttons */
   .btn {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
-           transition-all duration-150 border focus:outline-none focus:ring-2 focus:ring-offset-1
-           focus:ring-offset-cmd-bg disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold
+           transition-colors border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-cmd-blue hover:bg-cmd-blue-lt border-cmd-blue text-white
-           focus:ring-cmd-blue shadow-sm;
-  }
-  .btn-danger {
-    @apply btn bg-cmd-red-bg hover:bg-red-800/60 border-cmd-red/50 text-red-300
-           focus:ring-red-600;
+    @apply btn bg-maroon-800 hover:bg-maroon-700 border-maroon-700 text-white;
   }
   .btn-ghost {
-    @apply btn bg-transparent hover:bg-cmd-panel border-cmd-border text-slate-300
-           hover:text-white focus:ring-slate-600;
+    @apply btn bg-transparent hover:bg-slate-800 border-slate-700 text-slate-300 hover:text-white;
   }
-  .btn-amber {
-    @apply btn bg-amber-900/40 hover:bg-amber-800/60 border-amber-600/50 text-amber-300
-           focus:ring-amber-600;
-  }
-  .btn-sm {
-    @apply px-2.5 py-1.5 text-xs rounded-md;
-  }
-  .btn-xs {
-    @apply px-2 py-1 text-[11px] rounded;
-  }
-
-  /* Inputs */
-  .field {
-    @apply w-full bg-cmd-sidebar border border-cmd-border rounded-lg
-           px-3 py-2 text-sm text-slate-100 placeholder-slate-500
-           focus:border-cmd-blue-lt focus:ring-1 focus:ring-cmd-blue/40
-           transition-colors;
-  }
-  .field-mono {
-    @apply field font-mono tracking-wider;
-  }
-  .field-label {
-    @apply block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5;
-  }
-
-  /* Indian HSRP-style license plate */
-  .license-plate {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded
-           bg-white text-slate-900 font-mono font-bold text-xs tracking-widest
-           border-2 border-slate-800 shadow-sm;
-  }
-  .license-plate::before {
-    content: 'IND';
-    @apply bg-blue-600 text-white text-[8px] px-1 py-0.5 rounded font-black tracking-normal;
-  }
-
-  /* Live stream tile */
-  .video-tile {
-    @apply bg-black border border-cmd-border rounded-xl overflow-hidden
-           hover:border-cmd-blue/50 transition-all duration-200 flex flex-col;
-  }
-  .video-tile-header {
-    @apply flex items-center justify-between px-3 py-2
-           bg-cmd-sidebar border-b border-cmd-border/60 text-xs;
-  }
-
-  /* Live beacon dot */
-  .live-dot {
-    @apply w-2 h-2 rounded-full bg-blue-400 flex-shrink-0;
-    animation: beaconPulse 2s ease-in-out infinite;
-  }
-  .live-dot-green {
-    @apply w-2 h-2 rounded-full bg-green-400 flex-shrink-0;
-    animation: beaconPulse 2s ease-in-out infinite;
-  }
-  .live-dot-red {
-    @apply w-2 h-2 rounded-full bg-red-400 flex-shrink-0;
-    animation: alertPulse 1.2s ease-in-out infinite;
-  }
-
-  /* Stat card (small metric tile) */
-  .stat-card {
-    @apply panel p-3 flex flex-col gap-1;
-  }
-  .stat-number {
-    @apply text-xl font-black font-mono text-slate-100;
-  }
-  .stat-label {
-    @apply text-[10px] font-semibold uppercase tracking-widest text-slate-500;
-  }
-
-  /* Table base */
-  .data-table {
-    @apply w-full text-left text-xs;
-  }
-  .data-table thead th {
-    @apply px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500
-           bg-cmd-sidebar border-b border-cmd-border;
-  }
-  .data-table tbody tr {
-    @apply border-b border-cmd-border/40 hover:bg-cmd-panel/60 transition-colors;
-  }
-  .data-table tbody td {
-    @apply px-4 py-3 text-slate-300;
-  }
-
-  /* Alert card */
-  .alert-card {
-    @apply panel p-4 flex flex-col md:flex-row gap-4 transition-all duration-200;
-  }
-  .alert-card-critical {
-    @apply alert-card;
-    animation: alertFlash 1.5s ease-in-out infinite;
-  }
-
-  /* Segmented control */
-  .seg-btn {
-    @apply px-3 py-1.5 text-xs font-semibold rounded-md transition-all border
-           text-slate-400 border-cmd-border hover:text-slate-200 hover:bg-cmd-panel;
-  }
-  .seg-btn-active {
-    @apply seg-btn bg-cmd-blue/20 border-cmd-blue-lt text-blue-300;
+  .btn-danger {
+    @apply btn bg-red-950/60 hover:bg-red-900 border-red-700/60 text-red-300;
   }
 
   /* Leaflet dark overrides */
   .leaflet-container {
-    background: #080B10 !important;
+    background: #0d0f12 !important;
     font-family: 'Inter', sans-serif !important;
   }
   .leaflet-popup-content-wrapper {
-    background: #0D1624 !important;
-    color: #F8FAFC !important;
-    border: 1px solid #3B82F6 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+    background: #14171d !important;
+    color: #f3f4f6 !important;
+    border: 1px solid #751e31 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.8) !important;
   }
-  .leaflet-popup-tip { background: #0D1624 !important; }
+  .leaflet-popup-tip { background: #14171d !important; }
   .leaflet-control-zoom a {
-    background: #111C2D !important;
-    border-color: #26364D !important;
-    color: #94A3B8 !important;
+    background: #181b22 !important;
+    border-color: #2c323c !important;
+    color: #9ca3af !important;
   }
   .leaflet-control-zoom a:hover {
-    background: #162338 !important;
-    color: #F8FAFC !important;
+    background: #20242d !important;
+    color: #f3f4f6 !important;
   }
 }
-
-/* ── Custom keyframes (outside layers for global scope) */
-@keyframes beaconPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
-  60% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
-}
-@keyframes alertPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); }
-  60% { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
-}
-@keyframes alertFlash {
-  0%, 100% { border-color: rgba(220,38,38,0.6); background-color: rgba(220,38,38,0.07); }
-  50% { border-color: rgba(220,38,38,0.15); background-color: rgba(220,38,38,0.02); }
-}
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-.animate-slide-in { animation: slideIn 0.3s ease-out forwards; }

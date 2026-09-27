@@ -91,8 +91,8 @@ export default function WatchlistManager() {
       {/* Header Bar */}
       <div className="glass-panel p-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-            <Shield className="w-4 h-4 text-blue-400" />
+          <div className="w-9 h-9 rounded-lg bg-maroon-950 border border-maroon-800/60 flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 text-maroon-400" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-slate-100 uppercase tracking-wide">
@@ -106,7 +106,7 @@ export default function WatchlistManager() {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm"
+          className="px-4 py-2 rounded-lg bg-maroon-800 hover:bg-maroon-700 text-white font-semibold text-xs transition-colors flex items-center gap-2 border border-maroon-700/80 shadow-sm"
         >
           <Plus className="w-4 h-4" />
           <span>Add Target Vehicle</span>
@@ -121,8 +121,8 @@ export default function WatchlistManager() {
             onClick={() => setFilterCategory(c.id)}
             className={`px-3.5 py-1.5 rounded-md font-medium transition-all ${
               filterCategory === c.id
-                ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                ? 'bg-maroon-800 text-white font-semibold border border-maroon-700/80 shadow-sm'
+                : 'bg-[#0d0f14] border border-[#262c36] text-slate-400 hover:text-slate-200 hover:bg-[#181c24]'
             }`}
           >
             {c.label}
@@ -207,18 +207,18 @@ export default function WatchlistManager() {
 
       {/* Add Target Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-lg glass-panel p-6 shadow-2xl border-slate-700 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg glass-panel p-6 shadow-2xl border-[#3a4150] space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-400" />
+                <Shield className="w-4 h-4 text-maroon-400" />
                 <h3 className="font-semibold text-sm text-slate-100 uppercase tracking-wide">
                   Add Target Vehicle
                 </h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-200 text-xs p-1 rounded hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-slate-200 text-xs p-1 rounded hover:bg-[#1a1f28] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -234,7 +234,7 @@ export default function WatchlistManager() {
                     placeholder="e.g. GJ01AB1234"
                     value={newPlate}
                     onChange={(e) => setNewPlate(e.target.value.toUpperCase())}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 font-mono tracking-wider focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 font-mono tracking-wider focus:outline-none focus:border-maroon-700"
                   />
                 </div>
                 <div className="space-y-1">
@@ -242,7 +242,7 @@ export default function WatchlistManager() {
                   <select
                     value={newPriority}
                     onChange={(e) => setNewPriority(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   >
                     <option value="CRITICAL">CRITICAL</option>
                     <option value="HIGH">HIGH</option>
@@ -256,7 +256,7 @@ export default function WatchlistManager() {
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                 >
                   <option value="STOLEN">STOLEN VEHICLE</option>
                   <option value="WANTED_SUSPECT">WANTED SUSPECT</option>
@@ -274,7 +274,7 @@ export default function WatchlistManager() {
                   placeholder="Describe reason for flagging this vehicle..."
                   value={newReason}
                   onChange={(e) => setNewReason(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                 />
               </div>
 
@@ -286,7 +286,7 @@ export default function WatchlistManager() {
                     placeholder="e.g. 142/2026"
                     value={newFir}
                     onChange={(e) => setNewFir(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   />
                 </div>
                 <div className="space-y-1">
@@ -296,7 +296,7 @@ export default function WatchlistManager() {
                     placeholder="e.g. Vastrapur PS"
                     value={newStation}
                     onChange={(e) => setNewStation(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   />
                 </div>
               </div>
@@ -309,7 +309,7 @@ export default function WatchlistManager() {
                     placeholder="e.g. Hyundai Creta White"
                     value={newMakeModel}
                     onChange={(e) => setNewMakeModel(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   />
                 </div>
                 <div className="space-y-1">
@@ -319,7 +319,7 @@ export default function WatchlistManager() {
                     placeholder="Owner Name"
                     value={newOwner}
                     onChange={(e) => setNewOwner(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   />
                 </div>
               </div>
@@ -328,13 +328,13 @@ export default function WatchlistManager() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  className="px-4 py-2 rounded-md bg-[#1c2028] hover:bg-[#252b36] text-slate-300 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors"
+                  className="px-4 py-2 rounded-md bg-maroon-800 hover:bg-maroon-700 text-white font-semibold border border-maroon-700/80 transition-colors"
                 >
                   Save Target
                 </button>

@@ -74,7 +74,7 @@ export default function VehicleSearch() {
           width: 26px;
           height: 26px;
           border-radius: 50%;
-          background: #2563eb;
+          background: #751e31;
           color: #ffffff;
           font-family: 'JetBrains Mono', monospace;
           font-weight: 700;
@@ -83,7 +83,7 @@ export default function VehicleSearch() {
           align-items: center;
           justify-content: center;
           border: 2px solid #ffffff;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.6);
         ">
           ${hop.stop_number}
         </div>
@@ -101,7 +101,7 @@ export default function VehicleSearch() {
         <div style="padding: 4px; font-family: 'Inter', sans-serif;">
           <div style="font-weight: 600; color: #f1f5f9; font-size: 12px;">Stop ${hop.stop_number}: ${hop.camera_name}</div>
           <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Time: ${hop.detected_at ? new Date(hop.detected_at).toLocaleTimeString('en-IN') : 'N/A'}</div>
-          <div style="font-size: 11px; color: #38bdf8; margin-top: 2px;">Transit Speed: ${hop.inter_camera_speed_kmh} km/h</div>
+          <div style="font-size: 11px; color: #ec7f93; margin-top: 2px;">Transit Speed: ${hop.inter_camera_speed_kmh} km/h</div>
           <div style="font-size: 10px; color: #64748b; margin-top: 2px;">PTS: ${hop.pts_timestamp?.toFixed(0)}ms</div>
         </div>
       `);
@@ -111,7 +111,7 @@ export default function VehicleSearch() {
     // Draw connecting polyline path
     if (latLngs.length > 1) {
       const polyline = L.polyline(latLngs, {
-        color: '#3b82f6',
+        color: '#8c1f36',
         weight: 3.5,
         opacity: 0.9,
         dashArray: '6, 6'
@@ -131,8 +131,8 @@ export default function VehicleSearch() {
       <div className="glass-panel p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-              <Navigation className="w-4 h-4 text-blue-400" />
+            <div className="w-9 h-9 rounded-lg bg-maroon-950 border border-maroon-800/60 flex items-center justify-center shrink-0">
+              <Navigation className="w-4 h-4 text-maroon-400" />
             </div>
             <div>
               <h2 className="text-sm font-semibold text-slate-100 uppercase tracking-wide">
@@ -156,8 +156,8 @@ export default function VehicleSearch() {
                 }}
                 className={`font-mono text-xs px-2.5 py-1 rounded-md border transition-all ${
                   queryPlate === p
-                    ? 'bg-blue-600 text-white border-blue-500 font-bold'
-                    : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:border-slate-500'
+                    ? 'bg-maroon-800 text-white border-maroon-700/80 font-bold'
+                    : 'bg-[#0d0f14] border-[#262c36] text-slate-300 hover:border-slate-500'
                 }`}
               >
                 {p}
@@ -181,13 +181,13 @@ export default function VehicleSearch() {
               value={queryPlate}
               onChange={(e) => setQueryPlate(e.target.value.toUpperCase())}
               placeholder="Enter Registration Plate (e.g., GJ01AB1234)..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-700/80 text-slate-100 placeholder-slate-500 font-mono text-xs tracking-wider focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#0d0f14] border border-[#2a2f3a] text-slate-100 placeholder-slate-500 font-mono text-xs tracking-wider focus:outline-none focus:border-maroon-700 transition-colors"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+            className="px-5 py-2 rounded-lg bg-maroon-800 hover:bg-maroon-700 text-white font-semibold text-xs transition-colors flex items-center gap-2 border border-maroon-700/80 shadow-sm disabled:opacity-50"
           >
             <Navigation className="w-3.5 h-3.5" />
             <span>{loading ? 'Searching...' : 'Track Route'}</span>
@@ -201,7 +201,7 @@ export default function VehicleSearch() {
         <div className="lg:col-span-7 glass-panel p-3 flex flex-col h-[540px]">
           <div className="flex items-center justify-between px-2 py-1.5 text-xs border-b border-slate-800 mb-2">
             <span className="font-medium text-slate-300 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-blue-400" />
+              <MapPin className="w-3.5 h-3.5 text-maroon-400" />
               Surveillance Trajectory Map
             </span>
             {routeData && (
@@ -237,11 +237,11 @@ export default function VehicleSearch() {
               routeData.route_hops.map((hop, idx) => (
                 <div
                   key={hop.detection_id || idx}
-                  className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-colors space-y-2"
+                  className="p-3.5 rounded-lg bg-[#0e1117] border border-[#242934] hover:border-maroon-800/60 transition-colors space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-maroon-800 text-white font-mono font-bold text-xs flex items-center justify-center">
                         {hop.stop_number}
                       </span>
                       <span className="font-semibold text-xs text-slate-200">{hop.camera_name}</span>

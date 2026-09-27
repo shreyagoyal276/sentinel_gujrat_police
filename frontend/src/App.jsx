@@ -47,7 +47,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#0b0c0e] text-slate-100 font-sans selection:bg-maroon-800 selection:text-white">
       {/* Tactical Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -58,9 +58,9 @@ export default function App() {
 
       {/* Floating Real-Time Incident Toast */}
       {incomingToast && (
-        <div className="fixed top-16 right-6 z-50 max-w-md glass-panel p-4 shadow-xl border border-red-500/50 bg-slate-900/95">
+        <div className="fixed top-16 right-6 z-50 max-w-md glass-panel p-4 shadow-xl border border-red-800/60 bg-[#13161c]">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-red-950/60 border border-red-800/60 flex items-center justify-center shrink-0">
               <ShieldAlert className="w-4 h-4 text-red-400" />
             </div>
             <div className="flex-1 space-y-1.5">
@@ -86,13 +86,13 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800 flex justify-end">
+          <div className="mt-3 pt-2.5 border-t border-[#262c36] flex justify-end">
             <button
               onClick={() => {
                 setActiveTab('alerts');
                 setIncomingToast(null);
               }}
-              className="text-xs px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-500 text-white font-medium transition-colors"
+              className="text-xs px-3 py-1.5 rounded-md bg-maroon-800 hover:bg-maroon-700 text-white font-medium transition-colors"
             >
               View In Alerts
             </button>

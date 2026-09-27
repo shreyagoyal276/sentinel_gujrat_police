@@ -96,7 +96,7 @@ export default function GISMap({ onSelectCamera }) {
 
     // Plot Cameras
     filtered.forEach(cam => {
-      const color = cam.camera_type === 'ANPR' ? '#38bdf8' : (cam.camera_type === 'PTZ' ? '#fbbf24' : '#34d399');
+      const color = cam.camera_type === 'ANPR' ? '#c73252' : (cam.camera_type === 'PTZ' ? '#d97706' : '#10b981');
 
       // Custom marker icon
       const customIcon = L.divIcon({
@@ -116,7 +116,7 @@ export default function GISMap({ onSelectCamera }) {
               width: 22px;
               height: 22px;
               border-radius: 50%;
-              background: ${color}20;
+              background: ${color}25;
               border: 1.5px solid ${color};
             "></div>
             <div style="
@@ -203,15 +203,15 @@ export default function GISMap({ onSelectCamera }) {
       <div className="absolute top-5 left-5 z-10 w-80 glass-panel p-4 text-xs space-y-4 max-h-[calc(100vh-90px)] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-400" />
+            <Layers className="w-4 h-4 text-maroon-400" />
             <h2 className="font-semibold text-xs text-slate-100 uppercase tracking-wider">Map Controls</h2>
           </div>
           <button
             onClick={loadGISData}
             title="Refresh GIS data"
-            className="p-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="p-1 rounded bg-[#1c2028] hover:bg-[#252b36] text-slate-300 transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-maroon-400' : ''}`} />
           </button>
         </div>
 
@@ -223,7 +223,7 @@ export default function GISMap({ onSelectCamera }) {
           <select
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-1.5 text-slate-200 focus:outline-none focus:border-blue-500 text-xs"
+            className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-1.5 text-slate-200 focus:outline-none focus:border-maroon-700 text-xs"
           >
             <option value="ALL">All Departments ({cameras.length} Cameras)</option>
             {departments.map(d => (
@@ -244,8 +244,8 @@ export default function GISMap({ onSelectCamera }) {
                 onClick={() => setSelectedType(type)}
                 className={`py-1.5 rounded-md text-center font-medium transition-all ${
                   selectedType === type
-                    ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    ? 'bg-maroon-800 text-white font-semibold border border-maroon-700/80 shadow-sm'
+                    : 'bg-[#0d0f14] border border-[#2a2f3a] text-slate-400 hover:text-slate-200 hover:bg-[#181c24]'
                 }`}
               >
                 {type}
@@ -262,7 +262,7 @@ export default function GISMap({ onSelectCamera }) {
               type="checkbox"
               checked={showCoverage}
               onChange={(e) => setShowCoverage(e.target.checked)}
-              className="accent-blue-500 cursor-pointer rounded"
+              className="accent-maroon-700 cursor-pointer rounded"
             />
           </label>
           <label className="flex items-center justify-between cursor-pointer text-slate-300 text-xs select-none">
@@ -274,7 +274,7 @@ export default function GISMap({ onSelectCamera }) {
               type="checkbox"
               checked={showGaps}
               onChange={(e) => setShowGaps(e.target.checked)}
-              className="accent-red-500 cursor-pointer rounded"
+              className="accent-red-600 cursor-pointer rounded"
             />
           </label>
         </div>

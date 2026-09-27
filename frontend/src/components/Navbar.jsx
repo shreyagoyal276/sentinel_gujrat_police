@@ -30,15 +30,14 @@ export default function Navbar({ activeTab, setActiveTab, alertCount = 0, onTest
       <div className="flex items-center justify-between gap-4">
         {/* Gujarat Police Brand Logo & Header */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5 text-blue-400" />
-          </div>
+          <img 
+            src="/gujarat-police-icon.png" 
+            alt="Gujarat Police" 
+            className="w-9 h-9 object-contain shrink-0" 
+          />
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold tracking-wide text-slate-100">
-                SENTINEL
-              </span>
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                 Gujarat Police
               </span>
             </div>
@@ -49,7 +48,7 @@ export default function Navbar({ activeTab, setActiveTab, alertCount = 0, onTest
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+        <nav className="flex items-center gap-1 bg-[#12151b] p-1 rounded-lg border border-[#262c36]">
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -59,15 +58,15 @@ export default function Navbar({ activeTab, setActiveTab, alertCount = 0, onTest
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
+                    ? 'bg-maroon-800 text-white border border-maroon-700/70 font-semibold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#1a1f27]'
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
                 {item.badge > 0 && (
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                    isActive ? 'bg-white text-blue-700' : 'bg-red-500 text-white'
+                    isActive ? 'bg-white text-maroon-900' : 'bg-red-600 text-white'
                   }`}>
                     {item.badge}
                   </span>

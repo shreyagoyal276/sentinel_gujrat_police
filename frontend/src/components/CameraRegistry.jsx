@@ -84,8 +84,8 @@ export default function CameraRegistry() {
       {/* Registry Top Header */}
       <div className="glass-panel p-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-            <Database className="w-4 h-4 text-blue-400" />
+          <div className="w-9 h-9 rounded-lg bg-maroon-950 border border-maroon-800/60 flex items-center justify-center shrink-0">
+            <Database className="w-4 h-4 text-maroon-400" />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
@@ -105,7 +105,7 @@ export default function CameraRegistry() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors flex items-center gap-2 border border-slate-700"
+            className="px-4 py-2 rounded-lg bg-[#14171d] hover:bg-[#1f242e] text-slate-200 font-semibold text-xs transition-colors flex items-center gap-2 border border-[#2d3340]"
           >
             <Plus className="w-4 h-4" />
             <span>Register Camera</span>
@@ -113,7 +113,7 @@ export default function CameraRegistry() {
           <button
             onClick={handleSyncFromSentinel}
             disabled={syncing}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-maroon-800 hover:bg-maroon-700 text-white font-semibold text-xs transition-colors flex items-center gap-2 border border-maroon-700/80 shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             <span>{syncing ? 'Syncing...' : 'Sync Gateway'}</span>
@@ -123,9 +123,9 @@ export default function CameraRegistry() {
 
       {/* Sync Status Banner */}
       {syncResult && (
-        <div className="p-3.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-xs flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-blue-300">
-            <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-maroon-950/60 border border-maroon-800/60 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2.5 text-maroon-300">
+            <CheckCircle2 className="w-4 h-4 text-maroon-400 shrink-0" />
             <span>
               Synced {syncResult.total_discovered} cameras ({syncResult.created} created, {syncResult.updated} updated) from gateway catalogue.
             </span>
@@ -173,7 +173,7 @@ export default function CameraRegistry() {
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
-                      cam.camera_type === 'ANPR' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      cam.camera_type === 'ANPR' ? 'bg-maroon-950 text-maroon-300 border border-maroon-700/60' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                     }`}>
                       {cam.camera_type}
                     </span>
@@ -250,7 +250,7 @@ export default function CameraRegistry() {
                   <select
                     value={newDeptId}
                     onChange={(e) => setNewDeptId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   >
                     {departments.map(d => (
                       <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
@@ -262,7 +262,7 @@ export default function CameraRegistry() {
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-maroon-700"
                   >
                     <option value="ANPR">ANPR (Plate Reader)</option>
                     <option value="PTZ">PTZ Surveillance</option>
@@ -279,7 +279,7 @@ export default function CameraRegistry() {
                     step="any"
                     value={newLat}
                     onChange={(e) => setNewLat(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-maroon-700"
                   />
                 </div>
                 <div className="space-y-1">
@@ -289,7 +289,7 @@ export default function CameraRegistry() {
                     step="any"
                     value={newLng}
                     onChange={(e) => setNewLng(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-maroon-700"
                   />
                 </div>
               </div>
@@ -302,7 +302,7 @@ export default function CameraRegistry() {
                   placeholder="rtsp://host:port/stream/id"
                   value={newRtsp}
                   onChange={(e) => setNewRtsp(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-md px-3 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-maroon-700"
                 />
               </div>
 
@@ -310,13 +310,13 @@ export default function CameraRegistry() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                  className="px-4 py-2 rounded-md bg-[#1c2028] hover:bg-[#252b36] text-slate-300 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors"
+                  className="px-4 py-2 rounded-md bg-maroon-800 hover:bg-maroon-700 text-white font-semibold border border-maroon-700/80 transition-colors"
                 >
                   Save Camera
                 </button>

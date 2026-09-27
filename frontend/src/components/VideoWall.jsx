@@ -51,8 +51,8 @@ export default function VideoWall() {
       {/* Video Wall Top Controller Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 glass-panel p-5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-            <Video className="w-4 h-4 text-blue-400" />
+          <div className="w-9 h-9 rounded-lg bg-maroon-950 border border-maroon-800/60 flex items-center justify-center shrink-0">
+            <Video className="w-4 h-4 text-maroon-400" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-slate-100 uppercase tracking-wide">
@@ -67,7 +67,7 @@ export default function VideoWall() {
         {/* Grid Selector Controls */}
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400 font-medium">Layout:</span>
-          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-1 bg-[#0d0f14] p-1 rounded-lg border border-[#262c36]">
             {['1x1', '2x2', '3x3'].map(size => (
               <button
                 key={size}
@@ -77,8 +77,8 @@ export default function VideoWall() {
                 }}
                 className={`px-3 py-1 rounded-md text-xs font-mono font-medium transition-all ${
                   gridSize === size && !maximizedCamId
-                    ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    ? 'bg-maroon-800 text-white font-semibold border border-maroon-700/80 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#181c24]'
                 }`}
               >
                 {size}
