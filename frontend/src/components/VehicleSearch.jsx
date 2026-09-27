@@ -14,8 +14,8 @@ const TILE_LAYERS = {
   },
   street: {
     name: 'Street',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; OpenStreetMap',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri',
     maxZoom: 19
   },
   satellite: {
@@ -106,11 +106,14 @@ export default function VehicleSearch() {
     }
 
     const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
-    currentTileLayerRef.current = L.tileLayer(tileConf.url, {
+    const tileOpts = {
       attribution: tileConf.attribution,
-      subdomains: 'abcd',
       maxZoom: tileConf.maxZoom || 19
-    }).addTo(map);
+    };
+    if (tileConf.subdomains) {
+      tileOpts.subdomains = tileConf.subdomains;
+    }
+    currentTileLayerRef.current = L.tileLayer(tileConf.url, tileOpts).addTo(map);
 
     if (tileConf.labelUrl) {
       currentLabelLayerRef.current = L.tileLayer(tileConf.labelUrl, {
@@ -244,21 +247,33 @@ export default function VehicleSearch() {
 
       const marker = L.marker(pos, { icon: markerIcon });
       marker.bindPopup(`
-        <div style="padding: 4px; font-family: 'Inter', sans-serif;">
-          <div style="font-weight: 700; color: #f1f5f9; font-size: 12px; border-bottom: 1px solid #334155; padding-bottom: 3px;">
-            Stop ${hop.stop_number}: ${hop.camera_name}
+        <div style="background: #0e1117; padding: 12px 14px; border-radius: 8px; min-width: 250px; font-family: 'Inter', sans-serif;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a3342; padding-bottom: 8px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #751e31; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; border: 1.5px solid #ffffff;">${hop.stop_number}</span>
+              <span style="font-weight: 700; color: #ffffff; font-size: 13px;">Stop ${hop.stop_number}</span>
+            </div>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #e2e8f0; background: #1c222d; padding: 2px 6px; border-radius: 4px; border: 1px solid #333d4d;">
+              ${hop.detected_at ? new Date(hop.detected_at).toLocaleTimeString('en-IN') : 'N/A'}
+            </span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">
-            Time: <span style="color: #f1f5f9; font-family: 'JetBrains Mono';">${hop.detected_at ? new Date(hop.detected_at).toLocaleTimeString('en-IN') : 'N/A'}</span>
+
+          <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 8px; line-height: 1.3;">
+            ${hop.camera_name}
           </div>
-          <div style="font-size: 11px; color: #ec7f93; margin-top: 2px;">
-            Transit Speed: <span style="font-weight: 600;">${hop.inter_camera_speed_kmh} km/h</span>
-          </div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-            Confidence: ${(hop.confidence * 100).toFixed(0)}%
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+            <div style="background: #141822; padding: 6px 8px; border-radius: 6px; border: 1px solid #262e3d;">
+              <span style="color: #94a3b8; font-size: 10px; display: block;">Transit Speed</span>
+              <span style="color: #f43f5e; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;">${hop.inter_camera_speed_kmh} km/h</span>
+            </div>
+            <div style="background: #141822; padding: 6px 8px; border-radius: 6px; border: 1px solid #262e3d;">
+              <span style="color: #94a3b8; font-size: 10px; display: block;">Confidence</span>
+              <span style="color: #10b981; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;">${(hop.confidence * 100).toFixed(0)}%</span>
+            </div>
           </div>
         </div>
-      `);
+      `, { className: 'custom-dark-popup' });
       routeLayerRef.current.addLayer(marker);
     });
 

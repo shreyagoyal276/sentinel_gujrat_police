@@ -14,8 +14,8 @@ const TILE_LAYERS = {
   },
   street: {
     name: 'Street Map',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; OpenStreetMap contributors',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri &mdash; Sources: Esri, DeLorme, NAVTEQ, TomTom',
     maxZoom: 19
   },
   satellite: {
@@ -138,11 +138,14 @@ export default function GISMap({ onSelectCamera }) {
     }
 
     const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
-    currentTileLayerRef.current = L.tileLayer(tileConf.url, {
+    const tileOpts = {
       attribution: tileConf.attribution,
-      subdomains: 'abcd',
       maxZoom: tileConf.maxZoom || 19
-    }).addTo(map);
+    };
+    if (tileConf.subdomains) {
+      tileOpts.subdomains = tileConf.subdomains;
+    }
+    currentTileLayerRef.current = L.tileLayer(tileConf.url, tileOpts).addTo(map);
 
     if (tileConf.labelUrl) {
       currentLabelLayerRef.current = L.tileLayer(tileConf.labelUrl, {
@@ -260,8 +263,9 @@ export default function GISMap({ onSelectCamera }) {
             });
 
             layer.bindTooltip(`
-              <div style="font-family: 'Inter', sans-serif; padding: 2px 4px; font-weight: 600; font-size: 11px; color: #f1f5f9;">
-                ${districtName}
+              <div style="display: flex; align-items: center; gap: 7px; font-family: 'Inter', sans-serif;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c73252; box-shadow: 0 0 6px #c73252;"></span>
+                <span style="font-weight: 700; font-size: 12px; color: #ffffff; letter-spacing: 0.02em;">${districtName} District</span>
               </div>
             `, { sticky: true, className: 'district-tooltip' });
           }
@@ -377,9 +381,16 @@ export default function GISMap({ onSelectCamera }) {
       });
 
       marker.bindTooltip(`
-        <div style="font-family: 'Inter', sans-serif; padding: 4px;">
-          <div style="font-weight: 600; color: #f1f5f9; font-size: 12px;">${cam.name}</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${cam.camera_type} · ${cam.codec?.toUpperCase()} · ${cam.status}</div>
+        <div style="font-family: 'Inter', sans-serif; min-width: 140px; padding: 2px;">
+          <div style="display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #2a3342; padding-bottom: 4px; margin-bottom: 4px;">
+            <span style="display: block; width: 7px; height: 7px; border-radius: 50%; background: ${color}; box-shadow: 0 0 6px ${color};"></span>
+            <span style="font-weight: 700; color: #ffffff; font-size: 12px;">${cam.name}</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+            <span style="color: #cbd5e1; font-weight: 500;">${cam.camera_type}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #cbd5e1; background: #1c222d; padding: 1px 4px; border-radius: 3px;">${cam.codec?.toUpperCase()}</span>
+          </div>
+          <div style="font-size: 10px; color: #10b981; margin-top: 3px; font-weight: 600;">Status: Active (${cam.status})</div>
         </div>
       `, { direction: 'top', offset: [0, -10] });
 
@@ -413,10 +424,14 @@ export default function GISMap({ onSelectCamera }) {
         });
 
         gapMarker.bindTooltip(`
-          <div style="font-family: 'Inter', sans-serif; padding: 4px;">
-            <div style="font-weight: 600; color: #f87171; font-size: 11px;">Coverage Gap</div>
-            <div style="font-size: 12px; color: #f1f5f9; font-weight: 500; margin-top: 2px;">${spot.zone_name}</div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Deficiency: ${spot.deficiency_level} · Needs ${spot.cameras_recommended} units</div>
+          <div style="font-family: 'Inter', sans-serif; min-width: 150px; padding: 2px;">
+            <div style="display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #451a24; padding-bottom: 4px; margin-bottom: 4px;">
+              <span style="display: block; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444;"></span>
+              <span style="font-weight: 700; color: #fca5a5; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Coverage Gap</span>
+            </div>
+            <div style="font-size: 12px; color: #ffffff; font-weight: 600;">${spot.zone_name}</div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-top: 3px;">Deficiency: <span style="color: #f87171; font-weight: 600;">${spot.deficiency_level}</span></div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Recommendation: +${spot.cameras_recommended} units</div>
           </div>
         `, { direction: 'top' });
 

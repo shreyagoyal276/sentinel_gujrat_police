@@ -152,14 +152,57 @@
     background: #0d0f12 !important;
     font-family: 'Inter', sans-serif !important;
   }
-  .leaflet-popup-content-wrapper {
-    background: #14171d !important;
-    color: #f3f4f6 !important;
+  /* Leaflet Popups & Tooltips Dark High-Contrast Styling */
+  .leaflet-popup-content-wrapper,
+  .custom-dark-popup .leaflet-popup-content-wrapper {
+    background: #0e1117 !important;
+    background-color: #0e1117 !important;
+    color: #f1f5f9 !important;
     border: 1px solid #751e31 !important;
-    border-radius: 6px !important;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.8) !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
+    overflow: hidden !important;
   }
-  .leaflet-popup-tip { background: #14171d !important; }
+  .leaflet-popup-content,
+  .custom-dark-popup .leaflet-popup-content {
+    margin: 0 !important;
+    background: #0e1117 !important;
+    background-color: #0e1117 !important;
+    color: #f1f5f9 !important;
+  }
+  .leaflet-popup-tip,
+  .custom-dark-popup .leaflet-popup-tip {
+    background: #0e1117 !important;
+    background-color: #0e1117 !important;
+    box-shadow: none !important;
+  }
+  .leaflet-container a.leaflet-popup-close-button,
+  .custom-dark-popup a.leaflet-popup-close-button {
+    color: #94a3b8 !important;
+    padding: 8px !important;
+    font-size: 16px !important;
+  }
+  .leaflet-container a.leaflet-popup-close-button:hover,
+  .custom-dark-popup a.leaflet-popup-close-button:hover {
+    color: #ffffff !important;
+  }
+
+  /* Leaflet Tooltips High-Contrast Dark Styling */
+  .leaflet-tooltip, .district-tooltip {
+    background: #0e1117 !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #333d4d !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(140, 31, 54, 0.35) !important;
+  }
+  .leaflet-tooltip-top:before { border-top-color: #0e1117 !important; }
+  .leaflet-tooltip-bottom:before { border-bottom-color: #0e1117 !important; }
+  .leaflet-tooltip-left:before { border-left-color: #0e1117 !important; }
+  .leaflet-tooltip-right:before { border-right-color: #0e1117 !important; }
+
   .leaflet-control-zoom a {
     background: #181b22 !important;
     border-color: #2c323c !important;
