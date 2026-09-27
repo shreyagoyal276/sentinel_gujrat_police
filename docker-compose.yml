@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------------------
+  # Database: PostgreSQL 15 with PostGIS Extension
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: sentinel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------------------
+  # Streaming Glue & Cache: Redis 7
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------------------
+  # Sentinel Sandbox Gateway Simulator (for evaluation and offline testing)
+  # -------------------------------------------------------------------------
+  sentinel_mock:
+    build:
+      context: .
+      dockerfile: services/sentinel_mock/Dockerfile
+    container_name: sentinel_mock
+    restart: unless-stopped
+    ports:
+      - "8555:8555"
+      - "8554:8554"
+    environment:
+      - PORT=8555
+
+  # -------------------------------------------------------------------------
+  # Service 1: Camera Registry & GIS Service (Model 1 Layer)
+  # -------------------------------------------------------------------------
+  registry_service:
+    build:
+      context: .
+      dockerfile: services/registry_service/Dockerfile
+    container_name: sentinel_registry
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sentinel_mock:
+        condition: service_started
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_secret@postgres:5432/sentinel_db
+      - SENTINEL_GATEWAY_URL=http://sentinel_mock:8555
+      - REGISTRY_PORT=8001
+
+  # -------------------------------------------------------------------------
+  # Service 2: Ingestion & Stream Gateway Service
+  # -------------------------------------------------------------------------
+  ingestion_service:
+    build:
+      context: .
+      dockerfile: services/ingestion_service/Dockerfile
+    container_name: sentinel_ingestion
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      sentinel_mock:
+        condition: service_started
+    ports:
+      - "8002:8002"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - SENTINEL_GATEWAY_URL=http://sentinel_mock:8555
+      - OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp
+      - INGESTION_PORT=8002
+
+  # -------------------------------------------------------------------------
+  # Service 3: AI Analytics & Tracking Service (YOLOv8 + OCR + Multi-Camera)
+  # -------------------------------------------------------------------------
+  analytics_service:
+    build:
+      context: .
+      dockerfile: services/analytics_service/Dockerfile
+    container_name: sentinel_analytics
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_secret@postgres:5432/sentinel_db
+      - REDIS_URL=redis://redis:6379/0
+      - ANALYTICS_PORT=8003
+
+  # -------------------------------------------------------------------------
+  # Service 4: Alert & Command Service (WebSocket & Triage)
+  # -------------------------------------------------------------------------
+  alert_service:
+    build:
+      context: .
+      dockerfile: services/alert_service/Dockerfile
+    container_name: sentinel_alerts
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_secret@postgres:5432/sentinel_db
+      - REDIS_URL=redis://redis:6379/0
+      - ALERT_PORT=8004
+
+  # -------------------------------------------------------------------------
+  # Frontend: Command Dashboard (React + Leaflet + WebSockets)
+  # -------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentinel_frontend
+    restart: unless-stopped
+    depends_on:
+      - registry_service
+      - ingestion_service
+      - analytics_service
+      - alert_service
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+  redis_data:
