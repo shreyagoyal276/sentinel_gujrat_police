@@ -19,7 +19,6 @@ export default function VideoWall() {
     try {
       const data = await api.getCameras();
       setCameras(data || []);
-      // Default initial grid cameras
       if (data && data.length > 0) {
         setSelectedCameras(data.slice(0, 4).map(c => c.id));
       }
@@ -48,48 +47,51 @@ export default function VideoWall() {
     : cameras.slice(0, gridConfigs[gridSize].maxTiles);
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Video Wall Top Controller Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 glass-panel p-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-4 glass-panel p-5">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center">
-            <Video className="w-4 h-4 text-cyan-400" />
+          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+            <Video className="w-4 h-4 text-blue-400" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
-              Live CCTV Video Wall — Netram Unified Grid
+            <h2 className="text-sm font-semibold text-slate-100 uppercase tracking-wide">
+              Live Video Wall
             </h2>
-            <p className="text-[11px] text-slate-400">
-              Low-latency direct stream gateway • Zero raw video storage • Strict PTS timing
+            <p className="text-xs text-slate-400">
+              Multi-camera real-time surveillance grid
             </p>
           </div>
         </div>
 
         {/* Grid Selector Controls */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium">Grid Layout:</span>
-          {['1x1', '2x2', '3x3'].map(size => (
-            <button
-              key={size}
-              onClick={() => {
-                setMaximizedCamId(null);
-                setGridSize(size);
-              }}
-              className={`px-3 py-1 rounded text-xs font-semibold font-mono transition-all ${
-                gridSize === size && !maximizedCamId
-                  ? 'bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-sm shadow-cyan-500/20'
-                  : 'bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800'
-              }`}
-            >
-              {size}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-400 font-medium">Layout:</span>
+          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+            {['1x1', '2x2', '3x3'].map(size => (
+              <button
+                key={size}
+                onClick={() => {
+                  setMaximizedCamId(null);
+                  setGridSize(size);
+                }}
+                className={`px-3 py-1 rounded-md text-xs font-mono font-medium transition-all ${
+                  gridSize === size && !maximizedCamId
+                    ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+
           {maximizedCamId && (
             <button
               onClick={() => setMaximizedCamId(null)}
-              className="px-3 py-1 rounded text-xs font-semibold bg-amber-500/20 border border-amber-400 text-amber-300 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center gap-1.5 hover:bg-amber-500/30 transition-colors"
             >
-              <Minimize2 className="w-3 h-3" />
+              <Minimize2 className="w-3.5 h-3.5" />
               <span>Exit Fullscreen</span>
             </button>
           )}
@@ -97,10 +99,9 @@ export default function VideoWall() {
       </div>
 
       {/* Grid Tiles */}
-      <div className={`grid ${maximizedCamId ? 'grid-cols-1' : gridConfigs[gridSize].cols} gap-4`}>
+      <div className={`grid ${maximizedCamId ? 'grid-cols-1' : gridConfigs[gridSize].cols} gap-6`}>
         {activeTiles.map((cam) => {
           const metrics = ingestStatus[cam.id] || {};
-          const isStreaming = metrics.status === 'STREAMING' || true;
           const currentPts = metrics.current_pts_msec || 0;
           const ptsFps = metrics.fps_pts_derived || cam.declared_fps || 25.0;
           const sceneCuts = metrics.scene_cuts_detected || 0;
@@ -108,23 +109,23 @@ export default function VideoWall() {
           return (
             <div
               key={cam.id}
-              className="glass-panel overflow-hidden border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col group"
+              className="glass-panel overflow-hidden border border-slate-800 hover:border-slate-700 transition-all flex flex-col group shadow-md"
             >
               {/* Tile Header Bar */}
-              <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
+              <div className="px-4 py-3 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
                   <span className="live-beacon"></span>
-                  <span className="font-semibold text-slate-200 truncate max-w-[200px]">{cam.name}</span>
-                  <span className="font-mono text-[10px] text-slate-500">({cam.id})</span>
+                  <span className="font-medium text-slate-200 truncate max-w-[220px]">{cam.name}</span>
+                  <span className="font-mono text-[11px] text-slate-500">({cam.id})</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.2 rounded bg-slate-800 font-mono text-[10px] text-cyan-400 border border-slate-700">
-                    {cam.codec?.toUpperCase()} • TCP
+                  <span className="px-2 py-0.5 rounded bg-slate-900 font-mono text-[10px] text-slate-300 border border-slate-700/80">
+                    {cam.codec?.toUpperCase()}
                   </span>
                   <button
                     onClick={() => setMaximizedCamId(maximizedCamId === cam.id ? null : cam.id)}
-                    title={maximizedCamId === cam.id ? "Minimize" : "Maximize tile"}
-                    className="p-1 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-300"
+                    title={maximizedCamId === cam.id ? "Minimize" : "Maximize view"}
+                    className="p-1 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-300 transition-colors"
                   >
                     {maximizedCamId === cam.id ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                   </button>
@@ -143,34 +144,34 @@ export default function VideoWall() {
                   }}
                 />
 
-                {/* HUD Stream Telemetry Overlay */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1 pointer-events-none">
-                  <div className="bg-black/85 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                {/* Telemetry Overlay */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
+                  <div className="bg-black/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>PTS DERIVED: {ptsFps} FPS</span>
+                    <span>{ptsFps} FPS</span>
                   </div>
-                  <div className="bg-black/85 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 border border-cyan-500/30">
-                    PTS: {currentPts > 0 ? `${currentPts.toFixed(1)}ms` : 'SYNCING...'}
+                  <div className="bg-black/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-slate-300 border border-slate-700">
+                    PTS: {currentPts > 0 ? `${currentPts.toFixed(0)} ms` : 'Syncing'}
                   </div>
                   {sceneCuts > 0 && (
-                    <div className="bg-red-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-red-300 border border-red-500/40">
-                      REBOOT/CUTS: {sceneCuts}
+                    <div className="bg-red-950/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-red-300 border border-red-500/40">
+                      Discontinuities: {sceneCuts}
                     </div>
                   )}
                 </div>
 
-                <div className="absolute bottom-2 right-2 bg-black/85 px-2 py-0.5 rounded text-[10px] font-mono text-slate-300 border border-slate-700">
-                  {cam.resolution} • {cam.camera_type}
+                <div className="absolute bottom-3 right-3 bg-black/80 px-2 py-0.5 rounded text-[10px] font-mono text-slate-300 border border-slate-700">
+                  {cam.resolution} · {cam.camera_type}
                 </div>
               </div>
 
               {/* Tile Footer Stats */}
-              <div className="px-3 py-1.5 bg-slate-900/60 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-1">
-                  <Radio className="w-3 h-3 text-cyan-400" />
-                  <span className="font-mono text-slate-300">Transport: TCP (No UDP)</span>
+              <div className="px-4 py-2 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <Radio className="w-3 h-3 text-blue-400" />
+                  <span className="font-mono text-slate-300">TCP Stream</span>
                 </div>
-                <div className="text-slate-400">
+                <div>
                   Bitrate: <span className="font-mono text-slate-300">{cam.bitrate || 4096} kbps</span>
                 </div>
               </div>
