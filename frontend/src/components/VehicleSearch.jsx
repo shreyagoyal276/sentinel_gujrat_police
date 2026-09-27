@@ -3,21 +3,26 @@ import L from 'leaflet';
 import { Search, Navigation, MapPin, Clock, Gauge, ArrowRight, CheckCircle2, Compass, Layers } from 'lucide-react';
 import { api } from '../services/api';
 
+// Free, high-performance tactical map tiles without API key restrictions
 const TILE_LAYERS = {
   dark: {
     name: 'Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri',
+    maxZoom: 16
   },
-  voyager: {
+  street: {
     name: 'Street',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap',
+    maxZoom: 19
   },
   satellite: {
     name: 'Sat',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: '&copy; Esri, Maxar'
+    attribution: '&copy; Esri, Maxar',
+    maxZoom: 19
   }
 };
 
@@ -35,6 +40,7 @@ export default function VehicleSearch() {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const currentTileLayerRef = useRef(null);
+  const currentLabelLayerRef = useRef(null);
   const routeLayerRef = useRef(L.layerGroup());
   const boundaryLayerRef = useRef(L.layerGroup());
   const maskLayerRef = useRef(L.layerGroup());
@@ -54,9 +60,14 @@ export default function VehicleSearch() {
 
       currentTileLayerRef.current = L.tileLayer(TILE_LAYERS.dark.url, {
         attribution: TILE_LAYERS.dark.attribution,
-        subdomains: 'abcd',
-        maxZoom: 19
+        maxZoom: TILE_LAYERS.dark.maxZoom || 16
       }).addTo(map);
+
+      if (TILE_LAYERS.dark.labelUrl) {
+        currentLabelLayerRef.current = L.tileLayer(TILE_LAYERS.dark.labelUrl, {
+          maxZoom: TILE_LAYERS.dark.maxZoom || 16
+        }).addTo(map);
+      }
 
       maskLayerRef.current.addTo(map);
       boundaryLayerRef.current.addTo(map);
@@ -89,11 +100,23 @@ export default function VehicleSearch() {
     if (!map || !currentTileLayerRef.current) return;
 
     map.removeLayer(currentTileLayerRef.current);
+    if (currentLabelLayerRef.current) {
+      map.removeLayer(currentLabelLayerRef.current);
+      currentLabelLayerRef.current = null;
+    }
+
     const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
     currentTileLayerRef.current = L.tileLayer(tileConf.url, {
       attribution: tileConf.attribution,
       subdomains: 'abcd',
+      maxZoom: tileConf.maxZoom || 19
     }).addTo(map);
+
+    if (tileConf.labelUrl) {
+      currentLabelLayerRef.current = L.tileLayer(tileConf.labelUrl, {
+        maxZoom: tileConf.maxZoom || 16
+      }).addTo(map);
+    }
     // Leaflet tiles are placed in tilePane (z-index 200), keeping vectors and markers naturally on top
   }, [activeTile]);
 

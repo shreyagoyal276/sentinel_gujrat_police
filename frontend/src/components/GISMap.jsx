@@ -3,22 +3,26 @@ import L from 'leaflet';
 import { Layers, Eye, Shield, Activity, RefreshCw, AlertTriangle, Video, X, Check, MapPin, ZoomIn, Globe, Compass } from 'lucide-react';
 import { api } from '../services/api';
 
-// Tile Layer options
+// Free, high-performance tactical map tiles without API key restrictions
 const TILE_LAYERS = {
   dark: {
     name: 'Tactical Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16
   },
-  voyager: {
+  street: {
     name: 'Street Map',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
   },
   satellite: {
     name: 'Satellite',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19
   }
 };
 
@@ -31,6 +35,7 @@ export default function GISMap({ onSelectCamera }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const currentTileLayerRef = useRef(null);
+  const currentLabelLayerRef = useRef(null);
 
   const layersRef = useRef({
     mask: L.layerGroup(),
@@ -77,9 +82,14 @@ export default function GISMap({ onSelectCamera }) {
       // Base tile layer
       currentTileLayerRef.current = L.tileLayer(TILE_LAYERS.dark.url, {
         attribution: TILE_LAYERS.dark.attribution,
-        subdomains: 'abcd',
-        maxZoom: 19
+        maxZoom: TILE_LAYERS.dark.maxZoom || 16
       }).addTo(map);
+
+      if (TILE_LAYERS.dark.labelUrl) {
+        currentLabelLayerRef.current = L.tileLayer(TILE_LAYERS.dark.labelUrl, {
+          maxZoom: TILE_LAYERS.dark.maxZoom || 16
+        }).addTo(map);
+      }
 
       // Add feature layers in specific visual order
       layersRef.current.mask.addTo(map);
@@ -122,12 +132,23 @@ export default function GISMap({ onSelectCamera }) {
     if (!map || !currentTileLayerRef.current) return;
 
     map.removeLayer(currentTileLayerRef.current);
+    if (currentLabelLayerRef.current) {
+      map.removeLayer(currentLabelLayerRef.current);
+      currentLabelLayerRef.current = null;
+    }
+
     const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
     currentTileLayerRef.current = L.tileLayer(tileConf.url, {
       attribution: tileConf.attribution,
       subdomains: 'abcd',
-      maxZoom: 19
+      maxZoom: tileConf.maxZoom || 19
     }).addTo(map);
+
+    if (tileConf.labelUrl) {
+      currentLabelLayerRef.current = L.tileLayer(tileConf.labelUrl, {
+        maxZoom: tileConf.maxZoom || 16
+      }).addTo(map);
+    }
 
     // Leaflet tiles are placed in tilePane (z-index 200), keeping vectors (overlayPane z-index 400) and markers (markerPane z-index 600) naturally on top
   }, [activeTile]);
