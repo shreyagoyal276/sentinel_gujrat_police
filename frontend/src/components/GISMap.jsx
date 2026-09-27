@@ -1,63 +1,279 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Layers, Eye, Shield, Activity, RefreshCw, AlertTriangle, Video, X, Check } from 'lucide-react';
+import { Layers, Eye, Shield, Activity, RefreshCw, AlertTriangle, Video, X, Check, MapPin, ZoomIn, Globe, Compass } from 'lucide-react';
 import { api } from '../services/api';
+
+// Tile Layer options
+const TILE_LAYERS = {
+  dark: {
+    name: 'Tactical Dark',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  },
+  voyager: {
+    name: 'Street Map',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+  }
+};
+
+const GUJARAT_BOUNDS = [
+  [20.0, 68.0],
+  [24.7, 74.5]
+];
 
 export default function GISMap({ onSelectCamera }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const currentTileLayerRef = useRef(null);
+
   const layersRef = useRef({
+    mask: L.layerGroup(),
+    stateBorder: L.layerGroup(),
+    districts: L.layerGroup(),
     markers: L.layerGroup(),
     coverageCircles: L.layerGroup(),
     gapHotspots: L.layerGroup()
   });
 
+  const [activeTile, setActiveTile] = useState('dark');
   const [cameras, setCameras] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [gapData, setGapData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Layer Toggles
+  const [showMask, setShowMask] = useState(true);
+  const [showDistricts, setShowDistricts] = useState(true);
+  const [showCoverage, setShowCoverage] = useState(true);
+  const [showGaps, setShowGaps] = useState(true);
+
   // Filters
   const [selectedDept, setSelectedDept] = useState('ALL');
   const [selectedType, setSelectedType] = useState('ALL');
-  const [showCoverage, setShowCoverage] = useState(true);
-  const [showGaps, setShowGaps] = useState(true);
   const [previewCam, setPreviewCam] = useState(null);
+  const [hoveredDistrict, setHoveredDistrict] = useState(null);
 
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      // Center over Ahmedabad / Gandhinagar surveillance cluster
       const map = L.map(mapContainerRef.current, {
-        center: [23.0338, 72.5850],
-        zoom: 12,
+        center: [22.6708, 71.5724], // Center of Gujarat
+        zoom: 7.5,
+        minZoom: 6,
+        maxZoom: 19,
         zoomControl: false
       });
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Dark tactical map tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
+      // Base tile layer
+      currentTileLayerRef.current = L.tileLayer(TILE_LAYERS.dark.url, {
+        attribution: TILE_LAYERS.dark.attribution,
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
 
+      // Add feature layers in specific visual order
+      layersRef.current.mask.addTo(map);
+      layersRef.current.stateBorder.addTo(map);
+      layersRef.current.districts.addTo(map);
       layersRef.current.coverageCircles.addTo(map);
       layersRef.current.gapHotspots.addTo(map);
       layersRef.current.markers.addTo(map);
 
       mapInstanceRef.current = map;
+
+      // Fit Gujarat on initial load
+      map.fitBounds(GUJARAT_BOUNDS, { padding: [20, 20] });
+
+      // Invalidate size to guarantee no visual tearing
+      setTimeout(() => map.invalidateSize(), 150);
+      setTimeout(() => map.invalidateSize(), 500);
+
+      const handleResize = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      };
+      window.addEventListener('resize', handleResize);
+
+      // Load Gujarat GeoJSON Boundaries & Mask
+      loadGujaratBoundaries(map);
     }
 
     loadGISData();
 
     return () => {
-      // Keep instance or cleanup on unmount
+      // Window resize listener cleanup if unmounted
     };
   }, []);
+
+  // Switch Base Tile Layer
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !currentTileLayerRef.current) return;
+
+    map.removeLayer(currentTileLayerRef.current);
+    const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
+    currentTileLayerRef.current = L.tileLayer(tileConf.url, {
+      attribution: tileConf.attribution,
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Leaflet tiles are placed in tilePane (z-index 200), keeping vectors (overlayPane z-index 400) and markers (markerPane z-index 600) naturally on top
+  }, [activeTile]);
+
+  // Load Gujarat State GeoJSON: Inverted Mask, State Boundary, and Districts
+  const loadGujaratBoundaries = async (map) => {
+    try {
+      const [maskRes, boundaryRes, districtsRes] = await Promise.all([
+        fetch('/gujarat-mask-fast.geojson').then(r => r.ok ? r.json() : null),
+        fetch('/gujarat-boundary-fast.geojson').then(r => r.ok ? r.json() : null),
+        fetch('/gujarat-districts-fast.geojson').then(r => r.ok ? r.json() : null)
+      ]);
+
+      // 1. Inverted Mask Layer (Dims outside Gujarat)
+      if (maskRes) {
+        const maskGeoJson = L.geoJSON(maskRes, {
+          style: {
+            fillColor: '#0a0c10',
+            fillOpacity: 0.72,
+            stroke: false,
+            interactive: false
+          }
+        });
+        layersRef.current.mask.clearLayers();
+        layersRef.current.mask.addLayer(maskGeoJson);
+      }
+
+      // 2. Gujarat State Outer Border (Outer Glow + Crisp Crimson Maroon Border)
+      if (boundaryRes) {
+        layersRef.current.stateBorder.clearLayers();
+
+        // Subtle spotlight fill inside Gujarat
+        const spotlightFill = L.geoJSON(boundaryRes, {
+          style: {
+            fillColor: '#8c1f36',
+            fillOpacity: 0.04,
+            stroke: false,
+            interactive: false
+          }
+        });
+
+        // Broad outer aura / glow
+        const outerAura = L.geoJSON(boundaryRes, {
+          style: {
+            color: '#751e31',
+            weight: 7,
+            opacity: 0.45,
+            fill: false,
+            lineCap: 'round',
+            lineJoin: 'round',
+            interactive: false
+          }
+        });
+
+        // Crisp vibrant maroon boundary line
+        const crispBorder = L.geoJSON(boundaryRes, {
+          style: {
+            color: '#c73252',
+            weight: 2.2,
+            opacity: 0.95,
+            fill: false,
+            lineCap: 'round',
+            lineJoin: 'round',
+            interactive: false
+          }
+        });
+
+        layersRef.current.stateBorder.addLayer(spotlightFill);
+        layersRef.current.stateBorder.addLayer(outerAura);
+        layersRef.current.stateBorder.addLayer(crispBorder);
+      }
+
+      // 3. Gujarat Districts Outline
+      if (districtsRes) {
+        layersRef.current.districts.clearLayers();
+
+        const districtsLayer = L.geoJSON(districtsRes, {
+          style: () => ({
+            color: 'rgba(255, 255, 255, 0.12)',
+            weight: 0.9,
+            dashArray: '3, 4',
+            fillColor: 'transparent',
+            fillOpacity: 0
+          }),
+          onEachFeature: (feature, layer) => {
+            const districtName = feature.properties?.district || feature.properties?.NAME_2 || 'Gujarat District';
+
+            layer.on({
+              mouseover: (e) => {
+                const target = e.target;
+                target.setStyle({
+                  color: '#c73252',
+                  weight: 2,
+                  dashArray: '',
+                  fillColor: '#751e31',
+                  fillOpacity: 0.08
+                });
+                setHoveredDistrict(districtName);
+              },
+              mouseout: (e) => {
+                districtsLayer.resetStyle(e.target);
+                setHoveredDistrict(null);
+              },
+              click: () => {
+                if (map) {
+                  map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 12 });
+                }
+              }
+            });
+
+            layer.bindTooltip(`
+              <div style="font-family: 'Inter', sans-serif; padding: 2px 4px; font-weight: 600; font-size: 11px; color: #f1f5f9;">
+                ${districtName}
+              </div>
+            `, { sticky: true, className: 'district-tooltip' });
+          }
+        });
+
+        layersRef.current.districts.addLayer(districtsLayer);
+      }
+    } catch (err) {
+      console.warn('Gujarat boundary GeoJSON load error:', err);
+    }
+  };
+
+  // Visibility toggle handler for mask
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (showMask) {
+      if (!map.hasLayer(layersRef.current.mask)) map.addLayer(layersRef.current.mask);
+    } else {
+      if (map.hasLayer(layersRef.current.mask)) map.removeLayer(layersRef.current.mask);
+    }
+  }, [showMask]);
+
+  // Visibility toggle handler for districts
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (showDistricts) {
+      if (!map.hasLayer(layersRef.current.districts)) map.addLayer(layersRef.current.districts);
+    } else {
+      if (map.hasLayer(layersRef.current.districts)) map.removeLayer(layersRef.current.districts);
+    }
+  }, [showDistricts]);
 
   const loadGISData = async () => {
     setLoading(true);
@@ -186,25 +402,84 @@ export default function GISMap({ onSelectCamera }) {
         gapHotspots.addLayer(gapMarker);
       });
     }
-
-    // Auto fit bounds
-    if (filtered.length > 0) {
-      const bounds = L.latLngBounds(filtered.map(c => [c.latitude, c.longitude]));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-    }
   }, [cameras, gapData, selectedDept, selectedType, showCoverage, showGaps]);
+
+  // Quick Zoom handlers
+  const handleZoomGujarat = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.fitBounds(GUJARAT_BOUNDS, { padding: [20, 20], animate: true });
+    }
+  };
+
+  const handleZoomAhmedabad = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([23.0338, 72.5850], 12.5, { animate: true });
+    }
+  };
 
   return (
     <div className="relative w-full h-[calc(100vh-57px)] flex overflow-hidden">
       {/* GIS Leaflet Map Canvas */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+      <div ref={mapContainerRef} className="w-full h-full z-0 bg-[#0a0c10]" />
+
+      {/* Floating State Banner / Quick Controls */}
+      <div className="absolute top-5 right-14 z-10 flex items-center gap-2">
+        <div className="glass-panel px-3 py-1.5 flex items-center gap-2 shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="text-[11px] font-mono font-semibold text-slate-200 uppercase tracking-wide">
+            Gujarat State Grid
+          </span>
+          {hoveredDistrict && (
+            <span className="text-[11px] font-medium text-maroon-400 border-l border-slate-700 pl-2">
+              {hoveredDistrict}
+            </span>
+          )}
+        </div>
+
+        {/* Quick View Anchors */}
+        <div className="glass-panel p-1 flex items-center gap-1 shadow-lg">
+          <button
+            onClick={handleZoomGujarat}
+            title="Fit Entire Gujarat State"
+            className="px-2.5 py-1 rounded text-[11px] font-medium text-slate-300 hover:text-white hover:bg-maroon-900/60 transition-colors flex items-center gap-1.5"
+          >
+            <Compass className="w-3.5 h-3.5 text-maroon-400" />
+            Fit Gujarat
+          </button>
+          <button
+            onClick={handleZoomAhmedabad}
+            title="Focus Ahmedabad / Gandhinagar Surveillance Cluster"
+            className="px-2.5 py-1 rounded text-[11px] font-medium text-slate-300 hover:text-white hover:bg-maroon-900/60 transition-colors flex items-center gap-1.5"
+          >
+            <MapPin className="w-3.5 h-3.5 text-maroon-400" />
+            Ahmedabad Hub
+          </button>
+        </div>
+
+        {/* Basemap Switcher */}
+        <div className="glass-panel p-1 flex items-center gap-1 shadow-lg">
+          {Object.entries(TILE_LAYERS).map(([key, conf]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTile(key)}
+              className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                activeTile === key
+                  ? 'bg-maroon-800 text-white font-semibold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#1a1e27]'
+              }`}
+            >
+              {conf.name}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Floating GIS Filter & Control Panel */}
       <div className="absolute top-5 left-5 z-10 w-80 glass-panel p-4 text-xs space-y-4 max-h-[calc(100vh-90px)] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-maroon-400" />
-            <h2 className="font-semibold text-xs text-slate-100 uppercase tracking-wider">Map Controls</h2>
+            <h2 className="font-semibold text-xs text-slate-100 uppercase tracking-wider">Gujarat Surveillance Map</h2>
           </div>
           <button
             onClick={loadGISData}
@@ -225,7 +500,7 @@ export default function GISMap({ onSelectCamera }) {
             onChange={(e) => setSelectedDept(e.target.value)}
             className="w-full bg-[#0d0f14] border border-[#2a2f3a] rounded-md px-3 py-1.5 text-slate-200 focus:outline-none focus:border-maroon-700 text-xs"
           >
-            <option value="ALL">All Departments ({cameras.length} Cameras)</option>
+            <option value="ALL">All Jurisdictions ({cameras.length} Cameras)</option>
             {departments.map(d => (
               <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
             ))}
@@ -256,8 +531,41 @@ export default function GISMap({ onSelectCamera }) {
 
         {/* Map Layer Toggles */}
         <div className="space-y-2.5 border-t border-slate-800 pt-3">
+          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            Display Layers
+          </div>
+
           <label className="flex items-center justify-between cursor-pointer text-slate-300 text-xs select-none">
-            <span>Coverage Radius (150m)</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-maroon-400"></span>
+              Gujarat Focus (Fade Other States)
+            </span>
+            <input
+              type="checkbox"
+              checked={showMask}
+              onChange={(e) => setShowMask(e.target.checked)}
+              className="accent-maroon-700 cursor-pointer rounded"
+            />
+          </label>
+
+          <label className="flex items-center justify-between cursor-pointer text-slate-300 text-xs select-none">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+              District Boundaries (34 Districts)
+            </span>
+            <input
+              type="checkbox"
+              checked={showDistricts}
+              onChange={(e) => setShowDistricts(e.target.checked)}
+              className="accent-maroon-700 cursor-pointer rounded"
+            />
+          </label>
+
+          <label className="flex items-center justify-between cursor-pointer text-slate-300 text-xs select-none">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Coverage Radius (150m)
+            </span>
             <input
               type="checkbox"
               checked={showCoverage}
@@ -265,10 +573,11 @@ export default function GISMap({ onSelectCamera }) {
               className="accent-maroon-700 cursor-pointer rounded"
             />
           </label>
+
           <label className="flex items-center justify-between cursor-pointer text-slate-300 text-xs select-none">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-400"></span>
-              Coverage Gaps
+              Blind Spots / Coverage Gaps
             </span>
             <input
               type="checkbox"

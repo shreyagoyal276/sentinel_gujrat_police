@@ -1,15 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { Search, Navigation, MapPin, Clock, Gauge, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Search, Navigation, MapPin, Clock, Gauge, ArrowRight, CheckCircle2, Compass, Layers } from 'lucide-react';
 import { api } from '../services/api';
+
+const TILE_LAYERS = {
+  dark: {
+    name: 'Dark',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  },
+  voyager: {
+    name: 'Street',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  },
+  satellite: {
+    name: 'Sat',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, Maxar'
+  }
+};
+
+const GUJARAT_BOUNDS = [
+  [20.0, 68.0],
+  [24.7, 74.5]
+];
 
 export default function VehicleSearch() {
   const [queryPlate, setQueryPlate] = useState('GJ01AB1234');
   const [routeData, setRouteData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeTile, setActiveTile] = useState('dark');
+
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const currentTileLayerRef = useRef(null);
   const routeLayerRef = useRef(L.layerGroup());
+  const boundaryLayerRef = useRef(L.layerGroup());
+  const maskLayerRef = useRef(L.layerGroup());
 
   useEffect(() => {
     // Initial map setup
@@ -24,19 +52,104 @@ export default function VehicleSearch() {
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
+      currentTileLayerRef.current = L.tileLayer(TILE_LAYERS.dark.url, {
+        attribution: TILE_LAYERS.dark.attribution,
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
 
+      maskLayerRef.current.addTo(map);
+      boundaryLayerRef.current.addTo(map);
       routeLayerRef.current.addTo(map);
+
       mapInstanceRef.current = map;
+
+      // Invalidate size to guarantee smooth render
+      setTimeout(() => map.invalidateSize(), 150);
+      setTimeout(() => map.invalidateSize(), 500);
+
+      const handleResize = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      };
+      window.addEventListener('resize', handleResize);
+
+      // Load Gujarat boundaries & mask
+      loadGujaratOverlays(map);
     }
 
     // Run initial search
     handleSearch('GJ01AB1234');
   }, []);
+
+  // Basemap switch
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !currentTileLayerRef.current) return;
+
+    map.removeLayer(currentTileLayerRef.current);
+    const tileConf = TILE_LAYERS[activeTile] || TILE_LAYERS.dark;
+    currentTileLayerRef.current = L.tileLayer(tileConf.url, {
+      attribution: tileConf.attribution,
+      subdomains: 'abcd',
+    }).addTo(map);
+    // Leaflet tiles are placed in tilePane (z-index 200), keeping vectors and markers naturally on top
+  }, [activeTile]);
+
+  // Load Gujarat state boundary and inverted mask
+  const loadGujaratOverlays = async (map) => {
+    try {
+      const [maskRes, boundaryRes] = await Promise.all([
+        fetch('/gujarat-mask-fast.geojson').then(r => r.ok ? r.json() : null),
+        fetch('/gujarat-boundary-fast.geojson').then(r => r.ok ? r.json() : null)
+      ]);
+
+      if (maskRes) {
+        const maskGeoJson = L.geoJSON(maskRes, {
+          style: {
+            fillColor: '#0a0c10',
+            fillOpacity: 0.72,
+            stroke: false,
+            interactive: false
+          }
+        });
+        maskLayerRef.current.clearLayers();
+        maskLayerRef.current.addLayer(maskGeoJson);
+      }
+
+      if (boundaryRes) {
+        boundaryLayerRef.current.clearLayers();
+
+        // Outer maroon aura
+        const outerAura = L.geoJSON(boundaryRes, {
+          style: {
+            color: '#751e31',
+            weight: 6,
+            opacity: 0.45,
+            fill: false,
+            interactive: false
+          }
+        });
+
+        // Crisp maroon border
+        const crispBorder = L.geoJSON(boundaryRes, {
+          style: {
+            color: '#c73252',
+            weight: 2,
+            opacity: 0.95,
+            fill: false,
+            interactive: false
+          }
+        });
+
+        boundaryLayerRef.current.addLayer(outerAura);
+        boundaryLayerRef.current.addLayer(crispBorder);
+      }
+    } catch (err) {
+      console.warn('Error loading Gujarat overlays for route map:', err);
+    }
+  };
 
   const handleSearch = async (plateToSearch) => {
     const target = plateToSearch || queryPlate;
@@ -51,6 +164,9 @@ export default function VehicleSearch() {
       console.error('Error fetching route:', e);
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+      }, 100);
     }
   };
 
@@ -60,7 +176,10 @@ export default function VehicleSearch() {
 
     routeLayerRef.current.clearLayers();
 
-    if (!hops || hops.length === 0) return;
+    if (!hops || hops.length === 0) {
+      map.fitBounds(GUJARAT_BOUNDS, { padding: [20, 20] });
+      return;
+    }
 
     const latLngs = [];
 
@@ -68,11 +187,14 @@ export default function VehicleSearch() {
       const pos = [hop.latitude, hop.longitude];
       latLngs.push(pos);
 
+      const isLastStop = idx === hops.length - 1;
+
       // Stop marker
       const markerHtml = `
         <div style="
-          width: 26px;
-          height: 26px;
+          position: relative;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
           background: #751e31;
           color: #ffffff;
@@ -82,27 +204,36 @@ export default function VehicleSearch() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+          border: 2px solid ${isLastStop ? '#f43f5e' : '#ffffff'};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 ${isLastStop ? '12px #f43f5e80' : '4px rgba(0,0,0,0.5)'};
         ">
           ${hop.stop_number}
+          ${isLastStop ? '<span style="position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid #f43f5e; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>' : ''}
         </div>
       `;
 
       const markerIcon = L.divIcon({
         className: 'route-stop-pin',
         html: markerHtml,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
 
       const marker = L.marker(pos, { icon: markerIcon });
       marker.bindPopup(`
         <div style="padding: 4px; font-family: 'Inter', sans-serif;">
-          <div style="font-weight: 600; color: #f1f5f9; font-size: 12px;">Stop ${hop.stop_number}: ${hop.camera_name}</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Time: ${hop.detected_at ? new Date(hop.detected_at).toLocaleTimeString('en-IN') : 'N/A'}</div>
-          <div style="font-size: 11px; color: #ec7f93; margin-top: 2px;">Transit Speed: ${hop.inter_camera_speed_kmh} km/h</div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">PTS: ${hop.pts_timestamp?.toFixed(0)}ms</div>
+          <div style="font-weight: 700; color: #f1f5f9; font-size: 12px; border-bottom: 1px solid #334155; padding-bottom: 3px;">
+            Stop ${hop.stop_number}: ${hop.camera_name}
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">
+            Time: <span style="color: #f1f5f9; font-family: 'JetBrains Mono';">${hop.detected_at ? new Date(hop.detected_at).toLocaleTimeString('en-IN') : 'N/A'}</span>
+          </div>
+          <div style="font-size: 11px; color: #ec7f93; margin-top: 2px;">
+            Transit Speed: <span style="font-weight: 600;">${hop.inter_camera_speed_kmh} km/h</span>
+          </div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+            Confidence: ${(hop.confidence * 100).toFixed(0)}%
+          </div>
         </div>
       `);
       routeLayerRef.current.addLayer(marker);
@@ -110,16 +241,42 @@ export default function VehicleSearch() {
 
     // Draw connecting polyline path
     if (latLngs.length > 1) {
+      // Background glow line
+      const glowLine = L.polyline(latLngs, {
+        color: '#751e31',
+        weight: 6,
+        opacity: 0.5
+      });
+      routeLayerRef.current.addLayer(glowLine);
+
+      // Foreground dashed trajectory line
       const polyline = L.polyline(latLngs, {
-        color: '#8c1f36',
-        weight: 3.5,
-        opacity: 0.9,
+        color: '#f43f5e',
+        weight: 3,
+        opacity: 0.95,
         dashArray: '6, 6'
       });
       routeLayerRef.current.addLayer(polyline);
-      map.fitBounds(polyline.getBounds(), { padding: [50, 50], maxZoom: 14 });
+
+      map.fitBounds(polyline.getBounds(), { padding: [60, 60], maxZoom: 15 });
     } else if (latLngs.length === 1) {
       map.setView(latLngs[0], 13);
+    }
+  };
+
+  const handleFitRoute = () => {
+    if (!mapInstanceRef.current || !routeData?.route_hops?.length) return;
+    const latLngs = routeData.route_hops.map(h => [h.latitude, h.longitude]);
+    if (latLngs.length > 1) {
+      mapInstanceRef.current.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], animate: true });
+    } else if (latLngs.length === 1) {
+      mapInstanceRef.current.setView(latLngs[0], 13, { animate: true });
+    }
+  };
+
+  const handleFitGujarat = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.fitBounds(GUJARAT_BOUNDS, { padding: [20, 20], animate: true });
     }
   };
 
@@ -139,7 +296,7 @@ export default function VehicleSearch() {
                 Vehicle Route Reconstruction
               </h2>
               <p className="text-xs text-slate-400">
-                Cross-camera journey tracking and transit velocity analysis
+                Cross-camera journey tracking and transit velocity analysis across Gujarat
               </p>
             </div>
           </div>
@@ -200,17 +357,51 @@ export default function VehicleSearch() {
         {/* Left: Interactive Route GIS Map Canvas */}
         <div className="lg:col-span-7 glass-panel p-3 flex flex-col h-[540px]">
           <div className="flex items-center justify-between px-2 py-1.5 text-xs border-b border-slate-800 mb-2">
-            <span className="font-medium text-slate-300 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-maroon-400" />
-              Surveillance Trajectory Map
-            </span>
-            {routeData && (
-              <span className="text-[11px] font-mono text-slate-400">
-                {routeData.total_sightings} Sightings · {routeData.total_distance_traveled_km || 0} km Total
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-300 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-maroon-400" />
+                Gujarat Route Trajectory
               </span>
-            )}
+              {routeData && (
+                <span className="text-[11px] font-mono text-maroon-300 bg-maroon-950/80 px-2 py-0.5 rounded border border-maroon-800/60">
+                  {routeData.total_sightings} Sightings · {routeData.total_distance_traveled_km || 0} km
+                </span>
+              )}
+            </div>
+
+            {/* Map Action Pills */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleFitRoute}
+                title="Fit Route Bounds"
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a1e27] hover:bg-maroon-900/60 text-slate-300 transition-colors"
+              >
+                Fit Route
+              </button>
+              <button
+                onClick={handleFitGujarat}
+                title="Fit Gujarat State"
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a1e27] hover:bg-maroon-900/60 text-slate-300 transition-colors"
+              >
+                Fit Gujarat
+              </button>
+              <div className="border-l border-slate-700 pl-1 flex items-center gap-0.5">
+                {Object.entries(TILE_LAYERS).map(([k, c]) => (
+                  <button
+                    key={k}
+                    onClick={() => setActiveTile(k)}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
+                      activeTile === k ? 'bg-maroon-800 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div ref={mapContainerRef} className="w-full flex-1 rounded-lg overflow-hidden" />
+
+          <div ref={mapContainerRef} className="w-full flex-1 rounded-lg overflow-hidden bg-[#0a0c10]" />
         </div>
 
         {/* Right: Chronological Timeline Stops */}
